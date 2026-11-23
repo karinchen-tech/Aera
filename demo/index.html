@@ -1,0 +1,638 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AERA Live Demo</title>
+<meta name="description" content="See what your business looks like with AERA automations: live CRM updates, a WhatsApp AI agent and missed-call text back.">
+<meta property="og:title" content="AERA Live Demo">
+<meta property="og:description" content="Every action your automations take, live. A demo with sample data.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Rubik:wght@500;600;700&display=swap">
+<style>
+/* Layout: control-room dashboard — summary tiles, then chart beside a live phone, then the work log beside an ROI estimate. */
+:root {
+  --bg: #f1f4f1;
+  --surface: #ffffff;
+  --surface-2: #e8ede9;
+  --line: #d8e0da;
+  --fg: #16201b;
+  --muted: #5d6b63;
+  --accent: #155e48;
+  --accent-ink: #ffffff;
+  --accent-soft: #dcece5;
+  --warn: #9a5b00;
+  --warn-soft: #f8ecd6;
+  --s-crm: #3366cc;
+  --s-wa: #1a9a68;
+  --s-call: #d07a22;
+  --wa-bg: #e7e1d6;
+  --wa-in: #ffffff;
+  --wa-out: #d6f5c6;
+  --wa-head: #0f5a46;
+  --font-display: "Rubik", "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  --radius: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1412; --surface: #171e1b; --surface-2: #1f2824; --line: #2b3631; --fg: #e9efeb; --muted: #9aa9a1;
+    --accent: #5cc7a0; --accent-ink: #0b1712; --accent-soft: #1b3229; --warn: #e8a64c; --warn-soft: #3a2b14;
+    --s-crm: #6f9bf2; --s-wa: #4fcb95; --s-call: #ec9f55;
+    --wa-bg: #0d1513; --wa-in: #1f2b27; --wa-out: #1d4a3c; --wa-head: #1b3a31;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1412; --surface: #171e1b; --surface-2: #1f2824; --line: #2b3631; --fg: #e9efeb; --muted: #9aa9a1;
+  --accent: #5cc7a0; --accent-ink: #0b1712; --accent-soft: #1b3229; --warn: #e8a64c; --warn-soft: #3a2b14;
+  --s-crm: #6f9bf2; --s-wa: #4fcb95; --s-call: #ec9f55;
+  --wa-bg: #0d1513; --wa-in: #1f2b27; --wa-out: #1d4a3c; --wa-head: #1b3a31;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+.num { font-variant-numeric: tabular-nums; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.ribbon { background: var(--fg); color: var(--bg); font-size: 13px; text-align: center; padding-block: 8px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.ribbon b { font-weight: 600; }
+.wrap { max-width: 1200px; margin: 0 auto; padding-block: 22px 56px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 16px; }
+
+.top { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.logo { width: 44px; height: 44px; flex: none; border-radius: 12px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-family: var(--font-display); font-weight: 700; font-size: 20px; }
+.brand h1 { font-size: 24px; line-height: 1.2; overflow-wrap: anywhere; }
+.sub { color: var(--muted); font-size: 13px; }
+.live { color: var(--s-wa); display: inline-flex; align-items: center; gap: 6px; font-weight: 500; }
+.live i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: pulse 1.8s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+
+.controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.seg { display: inline-flex; background: var(--surface-2); border-radius: 11px; padding: 3px; gap: 2px; flex-wrap: wrap; }
+.seg button { border: 0; background: transparent; padding: 7px 14px; border-radius: 8px; cursor: pointer; color: var(--muted); font-size: 14px; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--fg); font-weight: 600; box-shadow: 0 1px 3px rgb(0 0 0 / .08); }
+.name-in { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 7px 12px; width: 210px; max-width: 100%; font-size: 14px; }
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 7px 13px; cursor: pointer; font-size: 14px; }
+.btn:hover { background: var(--surface-2); }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); min-width: 0; }
+.panel-h { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; padding: 16px 18px 0; }
+.panel-h h2 { font-size: 17px; }
+
+.kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.kpi { padding: 15px 16px; display: grid; gap: 4px; align-content: start; }
+.kpi .l { color: var(--muted); font-size: 13px; }
+.kpi .v { font-family: var(--font-display); font-size: 31px; font-weight: 600; line-height: 1.1; letter-spacing: -.3px; }
+.kpi .d { font-size: 12px; color: var(--muted); }
+.kpi .d b { color: var(--s-wa); font-weight: 600; }
+.kpi.hero { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.kpi.hero .l, .kpi.hero .d, .kpi.hero .d b { color: var(--accent-ink); opacity: .85; }
+.bump { animation: bump .5s ease-out; }
+@keyframes bump { 0% { transform: translateY(-3px); } 100% { transform: none; } }
+
+.row-a { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start; }
+.row-b { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 16px; align-items: start; }
+
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+.legend span { display: inline-flex; gap: 6px; align-items: center; }
+.legend i { width: 10px; height: 10px; border-radius: 3px; }
+.chart { padding: 6px 14px 14px; position: relative; }
+.chart svg { width: 100%; height: auto; display: block; }
+.chart .grid { stroke: var(--line); }
+.chart .ax { fill: var(--muted); font-size: 11px; font-family: var(--font-body); }
+.chart .today { fill: var(--accent); font-size: 11px; font-weight: 600; font-family: var(--font-body); }
+
+.autos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding: 14px 18px 18px; }
+.auto { border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 8px; align-content: start; border-top: 3px solid var(--c); }
+.auto .h { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.auto .n { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.auto .ico { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: color-mix(in srgb, var(--c) 15%, transparent); color: var(--c); flex: none; }
+.auto .ico svg { width: 17px; height: 17px; }
+.auto p { margin: 0; color: var(--muted); font-size: 13px; }
+.auto .st { display: flex; gap: 18px; }
+.auto .st b { display: block; font-family: var(--font-display); font-size: 21px; line-height: 1.1; }
+.auto .st small { color: var(--muted); font-size: 12px; }
+.pill { font-size: 12px; padding: 2px 9px; border-radius: 99px; background: var(--accent-soft); color: var(--s-wa); white-space: nowrap; display: inline-flex; align-items: center; gap: 5px; }
+.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+/* Phone */
+.phone { background: var(--surface); border: 1px solid var(--line); border-radius: 30px; padding: 10px; }
+.screen { border-radius: 22px; overflow: hidden; background: var(--wa-bg); display: grid; grid-template-rows: auto 1fr auto; height: 470px; }
+.wa-head { background: var(--wa-head); color: #fff; padding: 11px 14px; display: flex; align-items: center; gap: 10px; }
+.wa-av { width: 34px; height: 34px; border-radius: 50%; background: rgb(255 255 255 / .2); display: grid; place-items: center; font-weight: 600; font-size: 14px; }
+.wa-head .t { font-weight: 600; font-size: 14px; line-height: 1.2; }
+.wa-head .s { font-size: 12px; opacity: .8; }
+.wa-body { overflow: hidden; padding: 12px; display: flex; flex-direction: column; justify-content: flex-end; gap: 6px; }
+.msg { max-width: 84%; padding: 7px 10px 5px; border-radius: 10px; font-size: 13.5px; line-height: 1.45; box-shadow: 0 1px 1px rgb(0 0 0 / .08); animation: pop .25s ease-out; }
+.msg time { display: block; font-size: 10.5px; color: var(--muted); text-align: right; margin-top: 2px; }
+.msg.in { background: var(--wa-in); align-self: flex-start; border-start-start-radius: 2px; }
+.msg.out { background: var(--wa-out); align-self: flex-end; border-start-end-radius: 2px; }
+.msg.sys { align-self: center; background: var(--surface); color: var(--muted); font-size: 12px; box-shadow: none; padding: 4px 10px; text-align: center; }
+.msg .tag { display: inline-block; font-size: 10.5px; font-weight: 600; color: var(--s-wa); margin-bottom: 2px; }
+.typing { align-self: flex-end; background: var(--wa-out); border-radius: 10px; padding: 9px 12px; display: flex; gap: 4px; }
+.typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); animation: dot 1s infinite; }
+.typing i:nth-child(2) { animation-delay: .15s; } .typing i:nth-child(3) { animation-delay: .3s; }
+@keyframes dot { 0%,100% { opacity: .3; } 50% { opacity: 1; } }
+@keyframes pop { from { transform: scale(.96); opacity: 0; } to { transform: none; opacity: 1; } }
+.wa-foot { background: var(--surface); padding: 8px 12px; font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+.wa-foot b { color: var(--fg); font-weight: 600; }
+.phone-cap { text-align: center; font-size: 12px; color: var(--muted); padding: 8px 4px 2px; }
+
+/* Feed */
+.filters { display: flex; gap: 6px; flex-wrap: wrap; padding: 12px 18px 4px; }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 99px; padding: 4px 12px; font-size: 13px; cursor: pointer; color: var(--muted); }
+.chip[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.feed { list-style: none; margin: 0; padding: 4px 0 6px; max-height: 560px; overflow-y: auto; }
+.feed li { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 12px; padding: 11px 18px; border-top: 1px solid var(--line); align-items: start; }
+.feed li.new { animation: flash 2.4s ease-out; }
+@keyframes flash { from { background: var(--accent-soft); } to { background: transparent; } }
+.feed .ico { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: color-mix(in srgb, var(--c) 15%, transparent); color: var(--c); }
+.feed .ico svg { width: 17px; height: 17px; }
+.feed .t { font-weight: 500; }
+.feed .dd { color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
+.feed .m { display: flex; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin-top: 4px; }
+.feed .m .saved { color: var(--s-wa); }
+.feed .w { font-size: 12px; color: var(--muted); white-space: nowrap; text-align: end; }
+
+/* ROI */
+.roi { padding: 4px 18px 18px; display: grid; gap: 12px; }
+.roi label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+.roi .rr { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.roi .rr output { color: var(--fg); font-weight: 600; font-size: 14px; }
+.roi input[type=range] { width: 100%; accent-color: var(--accent); }
+.roi-out { background: var(--accent-soft); border-radius: 12px; padding: 14px; display: grid; gap: 2px; }
+.roi-out .big { font-family: var(--font-display); font-size: 30px; font-weight: 700; color: var(--accent); line-height: 1.15; }
+.roi-out small { color: var(--muted); font-size: 12px; }
+
+.cta { background: var(--accent); color: var(--accent-ink); border-radius: var(--radius); padding: 26px 24px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+.cta h2 { font-size: 22px; }
+.cta p { margin: 4px 0 0; opacity: .85; max-width: 60ch; }
+.steps { display: flex; gap: 10px; flex-wrap: wrap; }
+.steps span { background: rgb(255 255 255 / .14); border-radius: 99px; padding: 6px 14px; font-size: 13px; }
+.foot { text-align: center; color: var(--muted); font-size: 12px; }
+
+@media (max-width: 1000px) {
+  .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .row-a, .row-b { grid-template-columns: minmax(0, 1fr); }
+  .phone { max-width: 380px; width: 100%; justify-self: center; }
+  .autos { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 560px) {
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .kpi.hero { grid-column: 1 / -1; }
+  .kpi .v { font-size: 26px; }
+  .feed li { grid-template-columns: 30px minmax(0, 1fr); }
+  .feed .w { grid-column: 2; text-align: start; }
+  .name-in { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before { animation: none !important; }
+}
+</style>
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+</head>
+<body>
+<div class="ribbon">
+  <b>Demo</b> · All figures on this page are sample data showing what your dashboard will look like once your automations are connected
+</div>
+
+<main class="wrap" lang="en">
+  <header class="top">
+    <div class="brand">
+      <div class="logo" id="logo">A</div>
+      <div>
+        <h1 id="bizName">Your Real Estate Agency</h1>
+        <div class="sub"><span class="live"><i></i>Live</span> · Last 30 days · <span id="clock" class="num"></span></div>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Industry" id="indSeg"></div>
+      <input class="name-in" id="nameIn" placeholder="Business name for the demo…" aria-label="Business name for the demo" maxlength="40">
+      <button class="btn" id="pauseBtn" type="button">Pause</button>
+    </div>
+  </header>
+
+  <section class="kpis" aria-label="Summary">
+    <div class="panel kpi hero"><span class="l">Hours of work saved</span><span class="v num" id="k-hours">0</span><span class="d">That's <b id="k-days" class="num">0</b> full working days</span></div>
+    <div class="panel kpi"><span class="l">Value of time saved</span><span class="v num" id="k-value">0</span><span class="d">At <span id="k-rate" class="num"></span> per staff hour</span></div>
+    <div class="panel kpi"><span class="l">Actions completed</span><span class="v num" id="k-actions">0</span><span class="d"><b id="k-today" class="num">0</b> today</span></div>
+    <div class="panel kpi"><span class="l">Leads captured</span><span class="v num" id="k-leads">0</span><span class="d">Not one lead slipped through</span></div>
+    <div class="panel kpi"><span class="l">Handled after hours</span><span class="v num" id="k-after">0</span><span class="d">Evenings and weekends</span></div>
+  </section>
+
+  <div class="row-a">
+    <section class="panel">
+      <div class="panel-h">
+        <h2>Work done per day</h2>
+        <div class="legend" id="legend"></div>
+      </div>
+      <div class="chart" id="chart"></div>
+      <div class="autos" id="autos"></div>
+    </section>
+
+    <aside>
+      <div class="phone" aria-label="WhatsApp agent demo">
+        <div class="screen">
+          <div class="wa-head">
+            <div class="wa-av" id="waAv">A</div>
+            <div><div class="t" id="waName">Your Real Estate Agency</div><div class="s">AI agent · replies in seconds, 24/7</div></div>
+          </div>
+          <div class="wa-body" id="waBody" aria-live="polite"></div>
+          <div class="wa-foot"><span class="pill">Active</span><span>Answered today: <b id="waCount" class="num">0</b> chats</span></div>
+        </div>
+      </div>
+      <div class="phone-cap">How the agent answers your customers on WhatsApp (sample chat)</div>
+    </aside>
+  </div>
+
+  <div class="row-b">
+    <section class="panel">
+      <div class="panel-h">
+        <h2>Activity log</h2>
+        <span class="sub">Every action your automations took, the moment it happened</span>
+      </div>
+      <div class="filters" id="filters"></div>
+      <ul class="feed" id="feed"></ul>
+    </section>
+
+    <section class="panel">
+      <div class="panel-h"><h2>What is it worth to your business?</h2></div>
+      <div class="roi">
+        <label for="r-calls"><span class="rr">Missed calls per week <output id="o-calls" class="num"></output></span>
+          <input type="range" id="r-calls" min="2" max="80" step="1"></label>
+        <label for="r-conv"><span class="rr">Share that become a sale <output id="o-conv" class="num"></output></span>
+          <input type="range" id="r-conv" min="1" max="30" step="1"></label>
+        <label for="r-deal"><span class="rr"><span id="dealLabel">Average profit per sale</span> <output id="o-deal" class="num"></output></span>
+          <input type="range" id="r-deal" min="100" max="20000" step="50"></label>
+        <div class="roi-out">
+          <small>Revenue you could recover every month</small>
+          <span class="big num" id="roiOut">0</span>
+          <small id="roiHow"></small>
+        </div>
+        <small class="sub">Estimate only. Assumes an instant text-back brings back about 60% of missed callers.</small>
+      </div>
+    </section>
+  </div>
+
+  <section class="cta">
+    <div>
+      <h2>Want to see this with your real numbers?</h2>
+      <p>We connect your CRM, WhatsApp and phone system, and within two weeks every action shows up here in real time.</p>
+    </div>
+    <div class="steps"><span>1. Intro call</span><span>2. Connect your tools</span><span>3. Live dashboard</span></div>
+  </section>
+
+  <p class="foot">AERA · Automations and AI agents for businesses · Demo page with sample data</p>
+</main>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const ICONS = {
+    crm: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 10v10"/></svg>',
+    wa: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.6-5.2A8.5 8.5 0 1 1 21 12Z"/></svg>',
+    call: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/><path d="m15 3 6 6M21 3l-6 6"/></svg>',
+  };
+  const SERIES = { crm: "--s-crm", wa: "--s-wa", call: "--s-call" };
+
+  const NAMES = ["Emma Carter", "James Walker", "Olivia Brooks", "Daniel Reyes", "Sophie Turner", "Ryan Mitchell", "Grace Hall", "Noah Bennett", "Chloe Adams", "Liam Foster", "Ava Collins", "Ethan Price"];
+  const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+  let seed = 7;
+  const rnd = () => ((seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296);
+  const pick = (a) => a[Math.floor(rnd() * a.length)];
+  const phone = () => `(${Math.floor(200 + rnd() * 700)}) 555-${String(Math.floor(rnd() * 10000)).padStart(4, "0")}`;
+  const hour = (h) => `${((h + 11) % 12) + 1}:00 ${h < 12 ? "AM" : "PM"}`;
+
+  const IND = {
+    "real-estate": {
+      label: "Real estate", biz: "Your Real Estate Agency", rate: 40, deal: 9000, dealLabel: "Average commission per sale", calls: 15, conv: 6,
+      autos: {
+        crm: { name: "Airtable CRM sync", desc: "Every new listing and lead is logged automatically, with photos and owner details." },
+        wa: { name: "WhatsApp AI agent", desc: "Answers questions about listings, qualifies leads and books viewings." },
+        call: { name: "Missed-call text back", desc: "Anyone whose call you miss gets a text within a minute." },
+      },
+      events: {
+        crm: [
+          () => ({ t: `New listing added to CRM: ${pick(["2 bed", "3 bed", "4 bed", "Penthouse"])}, ${pick(["42 Oak Street", "18 Maple Avenue", "7 Harbor View", "120 Elm Road"])}`, d: `Listed at $${Math.round(320 + rnd() * 600)}k · Airtable record created`, min: 10 }),
+          () => ({ t: "New lead saved to CRM", d: `Looking for ${pick(["2", "3", "4"])} bedrooms in ${pick(["Downtown", "Riverside", "Westfield", "Lakeside"])}, budget up to $${Math.round(350 + rnd() * 450)}k`, min: 5, lead: true, c: true }),
+          () => ({ t: "Listing status updated: under offer", d: pick(["9 Cedar Lane", "56 Park Drive", "3 Willow Court"]), min: 4 }),
+        ],
+        wa: [
+          () => ({ t: "Customer question answered", d: `“${pick(["Is the Oak Street house still available?", "Does it have parking?", "What's the price on Maple Avenue?", "Can I see it on Thursday?"])}” · answered in ${3 + Math.floor(rnd() * 15)}s`, min: 3, c: true }),
+          () => ({ t: "Viewing booked", d: `${pick(["18 Maple Avenue", "42 Oak Street", "7 Harbor View"])} · ${pick(DAYS)} at ${hour(10 + Math.floor(rnd() * 8))} · added to calendar`, min: 15, lead: true, c: true }),
+          () => ({ t: "Lead qualified", d: `Budget $${Math.round(300 + rnd() * 500)}k · mortgage pre-approved · ready to view`, min: 10, lead: true, c: true }),
+        ],
+        call: [
+          () => ({ t: "Missed call → text sent", d: "“Hi, sorry we missed your call! Looking for a property? Just reply here.”", min: 5, lead: true, c: true }),
+          () => ({ t: "Caller replied, callback booked", d: `Callback today at ${hour(12 + Math.floor(rnd() * 6))}`, min: 10, lead: true, c: true }),
+        ],
+      },
+      chat: [
+        ["in", "Hi, I saw the house at 42 Oak Street. Is it still available?"],
+        ["out", "Hi! Yes, it's available 😊 3 bedrooms, 2 baths, 1,850 sq ft, with a garage and a big backyard. Listed at $485,000."],
+        ["in", "Could I see it this week?"],
+        ["out", "Of course. We have viewings on Wednesday at 5:00 PM or Thursday at 10:00 AM. Which works better for you?"],
+        ["in", "Thursday at 10 is perfect"],
+        ["out", "Done, you're booked for Thursday at 10:00 AM at 42 Oak Street. I'll send a reminder the day before. Could I get your full name?"],
+        ["in", "Emma Carter"],
+        ["out", "Thanks Emma! Our agent James will meet you there. See you Thursday 🏡"],
+        ["sys", "Lead saved to CRM · viewing added to James's calendar"],
+      ],
+    },
+    clinic: {
+      label: "Clinic", biz: "Your Clinic", rate: 35, deal: 450, dealLabel: "Average revenue per new patient", calls: 25, conv: 20,
+      autos: {
+        crm: { name: "Patient CRM sync", desc: "Every enquiry and appointment is logged on the patient's record automatically." },
+        wa: { name: "WhatsApp AI agent", desc: "Answers questions about treatments and prices, and books appointments." },
+        call: { name: "Missed-call text back", desc: "Patients who call while you're with someone get a text right away." },
+      },
+      events: {
+        crm: [
+          () => ({ t: "New patient added to CRM", d: `Interested in ${pick(["laser hair removal", "a facial", "Botox", "physiotherapy"])} · source: ${pick(["Instagram", "Google", "referral"])}`, min: 5, lead: true, c: true }),
+          () => ({ t: "Patient record updated after treatment", d: pick(["Session 3 of 6", "Follow-up booked", "Health form sent"]), min: 4, c: true }),
+        ],
+        wa: [
+          () => ({ t: "Patient question answered", d: `“${pick(["How much is a facial?", "Any appointments on Saturday?", "Does the treatment hurt?", "Where are you located?"])}” · answered in ${3 + Math.floor(rnd() * 12)}s`, min: 3, c: true }),
+          () => ({ t: "Appointment booked", d: `${pick(["Facial", "First consultation", "Laser session"])} · ${pick(DAYS)} at ${hour(9 + Math.floor(rnd() * 9))}`, min: 8, lead: true, c: true }),
+          () => ({ t: "Appointment reminder sent", d: "Patient confirmed ✓", min: 2, c: true }),
+        ],
+        call: [
+          () => ({ t: "Missed call → text sent", d: "“Hi, we're with a patient and couldn't pick up. How can we help? You can book right here.”", min: 5, lead: true, c: true }),
+          () => ({ t: "Patient replied and booked", d: "First consultation booked over WhatsApp", min: 8, lead: true, c: true }),
+        ],
+      },
+      chat: [
+        ["in", "Hi, how much is a facial at your clinic?"],
+        ["out", "Hi! A personalised facial is $120 and takes about an hour. Your first visit includes a free skin consultation 😊"],
+        ["in", "Do you have anything this week?"],
+        ["out", "We have openings on Tuesday at 11:00 AM or Wednesday at 4:30 PM. Which suits you?"],
+        ["in", "Wednesday 4:30"],
+        ["out", "Great, you're booked for Wednesday at 4:30 PM. I'll send a reminder the day before and a short form to fill in. What's your full name?"],
+        ["in", "Grace Hall"],
+        ["out", "Thanks Grace! See you on Wednesday ✨"],
+        ["sys", "Patient added to CRM · appointment added to the calendar"],
+      ],
+    },
+    services: {
+      label: "Home services", biz: "Your Business", rate: 35, deal: 1500, dealLabel: "Average profit per job", calls: 20, conv: 12,
+      autos: {
+        crm: { name: "CRM sync", desc: "Every enquiry, quote and job is logged automatically." },
+        wa: { name: "WhatsApp AI agent", desc: "Collects details and photos, gives a price range and books a site visit." },
+        call: { name: "Missed-call text back", desc: "When you're on a job, every caller gets a text straight away." },
+      },
+      events: {
+        crm: [
+          () => ({ t: "New enquiry saved to CRM", d: `${pick(["Bathroom remodel", "New flooring", "Interior painting", "Leak repair"])} · ${pick(["Springfield", "Oakdale", "Fairview", "Brookside"])}`, min: 5, lead: true, c: true }),
+          () => ({ t: "Quote sent to customer", d: `$${(1 + rnd() * 9).toFixed(1)}k · sent as a PDF on WhatsApp`, min: 15, c: true }),
+        ],
+        wa: [
+          () => ({ t: "Customer question answered", d: `“${pick(["How much to paint 3 rooms?", "Do you cover Oakdale?", "When could you start?", "Is there a warranty?"])}” · answered in ${3 + Math.floor(rnd() * 12)}s`, min: 3, c: true }),
+          () => ({ t: "Site visit booked for a quote", d: `${pick(DAYS)} at ${hour(8 + Math.floor(rnd() * 9))}`, min: 10, lead: true, c: true }),
+          () => ({ t: "Photos and details received", d: "4 photos · room measurements · saved to the customer file", min: 6, c: true }),
+        ],
+        call: [
+          () => ({ t: "Missed call → text sent", d: "“Hi, I'm on a job and can't pick up. Tell me what you need and I'll get back to you.”", min: 5, lead: true, c: true }),
+          () => ({ t: "Caller replied with details", d: "New enquiry opened in CRM", min: 6, lead: true, c: true }),
+        ],
+      },
+      chat: [
+        ["in", "Hi, how much would it cost to paint a 3-bedroom house inside?"],
+        ["out", "Hi! Interior painting for a 3-bedroom home usually runs $2,800–$4,200, depending on the walls. Could you send a few photos?"],
+        ["in", "Just sent 3 photos"],
+        ["out", "Got them, thanks! The walls look in good shape, so it should be close to $3,000. Want to book a quick visit to confirm the price?"],
+        ["in", "Yes, tomorrow morning?"],
+        ["out", "Booked for tomorrow at 8:30 AM. What's the exact address?"],
+        ["in", "14 Brook Lane, Fairview"],
+        ["out", "Perfect, see you tomorrow at 8:30 at 14 Brook Lane 👍"],
+        ["sys", "Enquiry saved to CRM · visit added to the calendar"],
+      ],
+    },
+  };
+
+  const nf = new Intl.NumberFormat("en-US");
+  const nf1 = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
+  const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+  const dayFmt = new Intl.DateTimeFormat("en-US", { day: "numeric", month: "short" });
+  const timeFmt = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" });
+
+  let state, indKey, paused = false, filter = null, customName = "";
+  try { customName = localStorage.getItem("aera-demo-name-en") || ""; } catch {}
+
+  function build(key) {
+    indKey = key; seed = 7 + key.length * 13;
+    const days = [];
+    const now = new Date();
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(now); d.setDate(d.getDate() - i);
+      const wd = d.getDay();
+      const busy = (wd === 0 ? 0.45 : wd === 6 ? 0.6 : 1) * (0.75 + rnd() * 0.5);
+      const f = i === 0 ? 0.55 : 1;
+      days.push({ date: d, crm: Math.round(6 * busy * f), wa: Math.round(19 * busy * f), call: Math.round(7 * busy * f) });
+    }
+    const totals = { crm: 0, wa: 0, call: 0 };
+    days.forEach((d) => { totals.crm += d.crm; totals.wa += d.wa; totals.call += d.call; });
+    const actions = totals.crm + totals.wa + totals.call;
+    state = {
+      days, totals, actions,
+      minutes: totals.crm * 7 + totals.wa * 5 + totals.call * 6.5,
+      leads: Math.round(actions * 0.31),
+      after: Math.round(actions * 0.36),
+      feed: [],
+      waToday: days[29].wa,
+    };
+    const t = Date.now();
+    for (let i = 0; i < 24; i++) state.feed.push(makeEvent(new Date(t - (i * 9 + rnd() * 7) * 60000)));
+    render();
+    restartChat();
+  }
+
+  function makeEvent(when) {
+    const r = rnd();
+    const auto = r < 0.55 ? "wa" : r < 0.78 ? "call" : "crm";
+    const e = pick(IND[indKey].events[auto])();
+    return { auto, ...e, who: e.c ? (auto === "call" && rnd() < 0.4 ? null : pick(NAMES)) : null, ph: e.c ? phone() : null, when, id: Math.random().toString(36).slice(2) };
+  }
+
+  const bizName = () => customName.trim() || IND[indKey].biz;
+  function paintName() {
+    $("bizName").textContent = $("waName").textContent = bizName();
+    $("logo").textContent = $("waAv").textContent = (customName.trim()[0] || "A").toUpperCase();
+    document.title = customName.trim() ? `${customName.trim()} · AERA` : "AERA Live Demo";
+  }
+
+  function render() {
+    const ind = IND[indKey];
+    paintName();
+    $("indSeg").innerHTML = Object.entries(IND).map(([k, v]) => `<button type="button" data-ind="${k}" aria-pressed="${k === indKey}">${v.label}</button>`).join("");
+    $("legend").innerHTML = ["wa", "call", "crm"].map((k) => `<span><i style="background:var(${SERIES[k]})"></i>${ind.autos[k].name}</span>`).join("");
+    $("dealLabel").textContent = ind.dealLabel;
+    $("r-calls").value = ind.calls; $("r-conv").value = ind.conv; $("r-deal").value = ind.deal;
+    renderKpis(); renderChart(); renderAutos(); renderFilters(); renderFeed(); renderRoi();
+  }
+
+  function renderKpis(bump) {
+    const hours = state.minutes / 60, rate = IND[indKey].rate;
+    const set = (id, v) => { const el = $(id); if (el.textContent !== v) { el.textContent = v; if (bump) { el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump"); } } };
+    set("k-hours", nf1.format(hours));
+    set("k-days", nf1.format(hours / 8));
+    set("k-value", money.format(hours * rate));
+    $("k-rate").textContent = money.format(rate);
+    set("k-actions", nf.format(state.actions));
+    const td = state.days[29]; set("k-today", nf.format(td.crm + td.wa + td.call));
+    set("k-leads", nf.format(state.leads));
+    set("k-after", nf.format(state.after));
+    $("waCount").textContent = nf.format(state.waToday);
+  }
+
+  function renderChart() {
+    const W = 760, H = 230, L = 30, B = 24, T = 14;
+    const max = Math.max(...state.days.map((d) => d.crm + d.wa + d.call));
+    const top = Math.ceil(max / 10) * 10, step = top / 4 >= 10 ? Math.ceil(top / 4 / 5) * 5 : 5;
+    const ymax = Math.ceil(top / step) * step;
+    const bw = (W - L) / state.days.length;
+    const y = (v) => H - B - (v / ymax) * (H - B - T);
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Actions per day over the last 30 days">`;
+    for (let v = 0; v <= ymax; v += step) s += `<line class="grid" x1="${L}" x2="${W}" y1="${y(v)}" y2="${y(v)}"/><text class="ax" x="${L - 6}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
+    state.days.forEach((d, i) => {
+      let acc = 0; const x = L + i * bw + bw * 0.16, w = bw * 0.68;
+      ["wa", "call", "crm"].forEach((k) => {
+        const v = d[k]; if (!v) return;
+        const y0 = y(acc), y1 = y(acc + v); acc += v;
+        s += `<rect x="${x.toFixed(1)}" y="${y1.toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max(0, y0 - y1 - 1).toFixed(1)}" rx="2" fill="var(${SERIES[k]})"><title>${dayFmt.format(d.date)}: ${v}</title></rect>`;
+      });
+      if (i === 29) s += `<text class="today" x="${(L + i * bw + bw / 2).toFixed(1)}" y="${H - 6}" text-anchor="middle">Today</text>`;
+      else if (i % 5 === 0) s += `<text class="ax" x="${(L + i * bw + bw / 2).toFixed(1)}" y="${H - 6}" text-anchor="middle">${dayFmt.format(d.date)}</text>`;
+    });
+    $("chart").innerHTML = s + "</svg>";
+  }
+
+  function renderAutos() {
+    const ind = IND[indKey], mins = { crm: 7, wa: 5, call: 6.5 };
+    $("autos").innerHTML = ["wa", "call", "crm"].map((k) => `
+      <div class="auto" style="--c:var(${SERIES[k]})">
+        <div class="h"><span class="n"><span class="ico">${ICONS[k]}</span>${ind.autos[k].name}</span><span class="pill">Running</span></div>
+        <p>${ind.autos[k].desc}</p>
+        <div class="st">
+          <div><b class="num">${nf.format(state.totals[k])}</b><small>actions this month</small></div>
+          <div><b class="num">${nf1.format((state.totals[k] * mins[k]) / 60)}</b><small>hours saved</small></div>
+        </div>
+      </div>`).join("");
+  }
+
+  function renderFilters() {
+    const ind = IND[indKey];
+    $("filters").innerHTML = `<button type="button" class="chip" data-f="" aria-pressed="${!filter}">All</button>` +
+      ["wa", "call", "crm"].map((k) => `<button type="button" class="chip" data-f="${k}" aria-pressed="${filter === k}">${ind.autos[k].name}</button>`).join("");
+  }
+
+  function ago(d) {
+    const m = Math.round((Date.now() - d.getTime()) / 60000);
+    if (m < 1) return "just now";
+    if (m < 60) return `${m} min ago`;
+    const h = Math.round(m / 60);
+    return h === 1 ? "1 hour ago" : `${h} hours ago`;
+  }
+
+  function renderFeed(newId) {
+    const items = state.feed.filter((e) => !filter || e.auto === filter).slice(0, 40);
+    $("feed").innerHTML = items.map((e) => `
+      <li class="${e.id === newId ? "new" : ""}" style="--c:var(${SERIES[e.auto]})">
+        <span class="ico">${ICONS[e.auto]}</span>
+        <div>
+          <div class="t">${e.t}</div>
+          <div class="dd">${e.d}</div>
+          <div class="m">${e.who ? `<span>${e.who}</span>` : ""}${e.ph ? `<span>${e.ph}</span>` : ""}<span class="saved">${e.min} min saved</span>${e.lead ? "<span>· lead</span>" : ""}</div>
+        </div>
+        <span class="w">${ago(e.when)}<br><span class="num">${timeFmt.format(e.when)}</span></span>
+      </li>`).join("");
+  }
+
+  function renderRoi() {
+    const calls = +$("r-calls").value, conv = +$("r-conv").value, deal = +$("r-deal").value;
+    $("o-calls").textContent = nf.format(calls);
+    $("o-conv").textContent = conv + "%";
+    $("o-deal").textContent = money.format(deal);
+    const deals = calls * 4.3 * 0.6 * (conv / 100);
+    $("roiOut").textContent = money.format(deals * deal);
+    $("roiHow").textContent = `${nf.format(Math.round(calls * 4.3))} calls a month × 60% come back × ${conv}% close ≈ ${nf1.format(deals)} extra sales`;
+  }
+
+  // Live simulation
+  function tick() {
+    if (paused) return;
+    const e = makeEvent(new Date());
+    state.feed.unshift(e); state.feed.length = Math.min(state.feed.length, 120);
+    state.days[29][e.auto]++; state.totals[e.auto]++; state.actions++; state.minutes += e.min;
+    if (e.lead) state.leads++;
+    const now = new Date(), h = now.getHours(), wd = now.getDay();
+    if (h < 9 || h >= 18 || wd === 0 || wd === 6) state.after++;
+    if (e.auto === "wa") state.waToday++;
+    renderKpis(true); renderChart(); renderAutos(); renderFeed(e.id);
+  }
+  setInterval(tick, 4200);
+  setInterval(() => { if (!paused) renderFeed(); $("clock").textContent = timeFmt.format(new Date()); }, 30000);
+  $("clock").textContent = timeFmt.format(new Date());
+
+  // WhatsApp chat playback
+  let chatTimer;
+  function restartChat() {
+    clearTimeout(chatTimer);
+    const body = $("waBody"); body.innerHTML = "";
+    const script = IND[indKey].chat;
+    let i = 0;
+    const base = new Date();
+    const step = () => {
+      if (paused) { chatTimer = setTimeout(step, 800); return; }
+      if (i >= script.length) { chatTimer = setTimeout(restartChat, 6000); return; }
+      const [who, text] = script[i];
+      const add = () => {
+        body.querySelector(".typing")?.remove();
+        const m = document.createElement("div");
+        m.className = `msg ${who}`;
+        const tm = new Date(base.getTime() + i * 40000);
+        m.innerHTML = who === "sys" ? text : `${who === "out" ? '<span class="tag">AI agent</span><br>' : ""}${text}<time>${timeFmt.format(tm)}</time>`;
+        body.appendChild(m);
+        while (body.scrollHeight > body.clientHeight && body.children.length > 1) body.firstElementChild.remove();
+        i++;
+        chatTimer = setTimeout(step, who === "in" ? 900 : 2300);
+      };
+      if (who === "out") {
+        const ty = document.createElement("div"); ty.className = "typing"; ty.innerHTML = "<i></i><i></i><i></i>";
+        body.appendChild(ty);
+        chatTimer = setTimeout(add, 1300);
+      } else add();
+    };
+    chatTimer = setTimeout(step, 600);
+  }
+
+  // Events
+  $("indSeg").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-ind]"); if (!b) return;
+    if (location.hash !== "#" + b.dataset.ind) location.hash = b.dataset.ind; else { filter = null; build(b.dataset.ind); }
+  });
+  $("filters").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-f]"); if (!b) return;
+    filter = b.dataset.f || null; renderFilters(); renderFeed();
+  });
+  $("nameIn").value = customName;
+  $("nameIn").addEventListener("input", (e) => {
+    customName = e.target.value;
+    try { localStorage.setItem("aera-demo-name-en", customName); } catch {}
+    paintName();
+  });
+  $("pauseBtn").addEventListener("click", () => {
+    paused = !paused; $("pauseBtn").textContent = paused ? "Resume" : "Pause";
+  });
+  ["r-calls", "r-conv", "r-deal"].forEach((id) => $(id).addEventListener("input", renderRoi));
+
+  const fromHash = () => { const k = location.hash.slice(1); filter = null; build(IND[k] ? k : "real-estate"); };
+  window.addEventListener("hashchange", fromHash);
+  fromHash();
+})();
+</script>
+</body>
+</html>
